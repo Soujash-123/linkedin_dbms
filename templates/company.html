@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Portal - Company Login</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header styles */
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            display: block;
+            margin: 0 auto 2rem;
+            max-width: 200px;
+            height: auto;
+        }
+
+        /* Toggle buttons */
+        .toggle-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .toggle-buttons button {
+            padding: 0.5rem 2rem;
+            font-size: 1rem;
+            border: none;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .toggle-buttons button.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Flash messages */
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+
+        .flash-message {
+            padding: 1rem;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Form styles */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .file-input-wrapper {
+            border: 2px dashed #ddd;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: #007bff;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        /* Button styles */
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        /* Links */
+        .user-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .user-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .user-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Job Portal - Companies</h2>
+
+        {% if logo_url %}
+        <img src="{{ logo_url }}" alt="Job Portal Logo" class="logo">
+        {% endif %}
+
+        <div class="toggle-buttons">
+            <button class="active" onclick="showForm('login')">Login</button>
+            <button onclick="showForm('signup')">Signup</button>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <!-- Company Login Form -->
+            <form action="{{ url_for('company_login') }}" method="POST" class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                    <div id="loginEmailError" class="error-message">Please enter a valid email address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                    <div id="loginPasswordError" class="error-message">Password is required</div>
+                </div>
+
+                <button type="submit" name="login">Login as Company</button>
+            </form>
+
+            <!-- Company Signup Form -->
+            <form action="{{ url_for('company_signup') }}" method="POST" class="signup-form" id="signupForm" style="display: none;" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="companyName">Company Name</label>
+                    <input type="text" id="companyName" name="company_name" required>
+                    <div id="companyNameError" class="error-message">Company name must be at least 3 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" name="email" required>
+                    <div id="signupEmailError" class="error-message">Please enter a valid email address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" required>
+                    <div id="signupPasswordError" class="error-message">Password must be at least 8 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="logo">Company Logo</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="logo" name="logo" accept=".png,.jpg,.jpeg" required>
+                        <div>Click or drag to upload company logo</div>
+                    </div>
+                    <div id="logoError" class="error-message">Please select a company logo (PNG or JPG)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="policy">Company Policy (PDF)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="policy" name="policy" accept=".pdf" required>
+                        <div>Click or drag to upload company policy</div>
+                    </div>
+                    <div id="policyError" class="error-message">Please upload company policy in PDF format</div>
+                </div>
+
+                <button type="submit" name="signup">Create Company Account</button>
+            </form>
+        </div>
+
+        <div class="user-link">
+            <a href="{{ url_for('login_signup') }}">Login as Job Seeker</a>
+        </div>
+    </div>
+
+    <script>
+        function showForm(formType) {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const buttons = document.querySelectorAll('.toggle-buttons button');
+
+            if (formType === 'login') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+                buttons[0].classList.add('active');
+                buttons[1].classList.remove('active');
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+                buttons[0].classList.remove('active');
+                buttons[1].classList.add('active');
+            }
+        }
+
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            let valid = true;
+            const email = document.getElementById('loginEmail');
+            const password = document.getElementById('loginPassword');
+
+            if (!email.value || !email.value.includes('@')) {
+                document.getElementById('loginEmailError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('loginEmailError').style.display = 'none';
+            }
+
+            if (!password.value) {
+                document.getElementById('loginPasswordError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('loginPasswordError').style.display = 'none';
+            }
+
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            let valid = true;
+            const companyName = document.getElementById('companyName');
+            const email = document.getElementById('signupEmail');
+            const password = document.getElementById('signupPassword');
+            const logo = document.getElementById('logo');
+            const policy = document.getElementById('policy');
+
+            if (!companyName.value || companyName.value.length < 3) {
+                document.getElementById('companyNameError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('companyNameError').style.display = 'none';
+            }
+
+            if (!email.value || !email.value.includes('@')) {
+                document.getElementById('signupEmailError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('signupEmailError').style.display = 'none';
+            }
+
+            if (!password.value || password.value.length < 8) {
+                document.getElementById('signupPasswordError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('signupPasswordError').style.display = 'none';
+            }
+
+            if (!logo.value) {
+                document.getElementById('logoError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('logoError').style.display = 'none';
+            }
+
+            if (!policy.value) {
+                document.getElementById('policyError').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('policyError').style.display = 'none';
+            }
+
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

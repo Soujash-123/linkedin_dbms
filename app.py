@@ -2,9 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change this to a secure secret key in production
+app.secret_key = 'your_secret_key_here'  # Change this in production
 
 # Configuration
 UPLOAD_FOLDER = 'static/uploads'
@@ -33,13 +35,37 @@ def init_db():
                         resume TEXT NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     
-    # Posts table
-    cursor.execute('''CREATE TABLE IF NOT EXISTS posts (
+    # Companies table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS companies (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER NOT NULL,
+                        company_name TEXT NOT NULL UNIQUE,
+                        email TEXT NOT NULL UNIQUE,
+                        password TEXT NOT NULL,
+                        logo TEXT NOT NULL,
+                        policy_doc TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+    
+    # Job Listings table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS job_listings (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        company_id INTEGER NOT NULL,
                         title TEXT NOT NULL,
-                        content TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        requirements TEXT NOT NULL,
+                        salary_range TEXT,
+                        location TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (company_id) REFERENCES companies (id))''')
+    
+    # Applications table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS applications (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        job_id INTEGER NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        status TEXT DEFAULT 'pending',
+                        cover_letter TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (job_id) REFERENCES job_listings (id),
                         FOREIGN KEY (user_id) REFERENCES users (id))''')
     
     conn.commit()
@@ -50,25 +76,32 @@ init_db()
 def get_db():
     """Helper function to get database connection"""
     conn = sqlite3.connect('jobportal.db')
-    conn.row_factory = sqlite3.Row  # This enables column access by name: row['column_name']
+    conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/', methods=['GET', 'POST'])
+# User routes
+@app.route('/')
+def index():
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    elif 'company_id' in session:
+        return redirect(url_for('company_dashboard'))
+    return redirect(url_for('login_signup'))
+
+@app.route('/login', methods=['GET', 'POST'])
 def login_signup():
     if request.method == 'POST':
-        if 'signup' in request.form:  # Handle Signup
+        if 'signup' in request.form:  # Handle User Signup
             username = request.form['username']
             email = request.form['email']
-            password = request.form['password']
+            password = generate_password_hash(request.form['password'])
             photo = request.files['photo']
             resume = request.files['resume']
             
-            # Validation
             if not all([username, email, password, photo, resume]):
                 flash('All fields are required.')
                 return redirect(url_for('login_signup'))
             
-            # File validation
             if not allowed_file(photo.filename, {'png', 'jpg', 'jpeg'}):
                 flash('Invalid photo format. Please use PNG or JPG.')
                 return redirect(url_for('login_signup'))
@@ -78,14 +111,12 @@ def login_signup():
                 return redirect(url_for('login_signup'))
             
             try:
-                # Save files
                 photo_filename = secure_filename(photo.filename)
                 resume_filename = secure_filename(resume.filename)
                 
                 photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
                 resume.save(os.path.join(app.config['UPLOAD_FOLDER'], resume_filename))
                 
-                # Save to database
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute('INSERT INTO users (username, email, password, photo, resume) VALUES (?, ?, ?, ?, ?)',
@@ -100,158 +131,103 @@ def login_signup():
                 flash('Username or email already exists.')
                 return redirect(url_for('login_signup'))
             except Exception as e:
-                flash('An error occurred during signup. Please try again.')
+                flash('An error occurred during signup.')
                 return redirect(url_for('login_signup'))
 
-        elif 'login' in request.form:  # Handle Login
+        elif 'login' in request.form:  # Handle User Login
             email = request.form['email']
             password = request.form['password']
 
-            if not all([email, password]):
-                flash('Email and password are required.')
-                return redirect(url_for('login_signup'))
-
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password))
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
             user = cursor.fetchone()
             conn.close()
 
-            if user:
+            if user and check_password_hash(user['password'], password):
                 session['user_id'] = user['id']
                 session['username'] = user['username']
                 return redirect(url_for('dashboard'))
             else:
-                flash('Invalid credentials. Please try again.')
+                flash('Invalid credentials.')
                 return redirect(url_for('login_signup'))
-                
+
     return render_template('login.html')
 
-@app.route('/dashboard')
-def dashboard():
-    if 'user_id' not in session:
-        flash('Please login to access the dashboard.')
-        return redirect(url_for('login_signup'))
-    
+# Fix the company route
+@app.route('/company', methods=['GET'])
+def company_login_signup():
+    return render_template('company.html')
+
+# Redirect from /company.html to /company
+@app.route('/company.html')
+def redirect_to_company():
+    return redirect(url_for('company_login_signup'))
+
+# Company login and signup logic
+@app.route('/company/login', methods=['POST'])
+def company_login():
+    email = request.form['email']
+    password = request.form['password']
+
     conn = get_db()
     cursor = conn.cursor()
-    
-    # Get user information
-    cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
-    user = cursor.fetchone()
-    
-    # Get user's posts
-    cursor.execute('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC', (session['user_id'],))
-    posts = cursor.fetchall()
-    
+    cursor.execute('SELECT * FROM companies WHERE email = ?', (email,))
+    company = cursor.fetchone()
     conn.close()
-    
-    return render_template('dashboard.html', 
-                         user=user,
-                         posts=posts,
-                         username=session['username'])
 
-@app.route('/create_post', methods=['POST'])
-def create_post():
-    if 'user_id' not in session:
-        flash('Please login to create a post.')
-        return redirect(url_for('login_signup'))
+    if company and check_password_hash(company['password'], password):
+        session['company_id'] = company['id']
+        session['company_name'] = company['company_name']
+        return redirect(url_for('company_dashboard'))
+    else:
+        flash('Invalid credentials.')
+        return redirect(url_for('company_login_signup'))
+
+@app.route('/company/signup', methods=['POST'])
+def company_signup():
+    company_name = request.form['company_name']
+    email = request.form['email']
+    password = generate_password_hash(request.form['password'])
+    logo = request.files['logo']
+    policy = request.files['policy']
     
-    title = request.form.get('title')
-    content = request.form.get('content')
+    if not all([company_name, email, password, logo, policy]):
+        flash('All fields are required.')
+        return redirect(url_for('company_login_signup'))
     
-    if not all([title, content]):
-        flash('Title and content are required.')
-        return redirect(url_for('dashboard'))
+    if not allowed_file(logo.filename, {'png', 'jpg', 'jpeg'}):
+        flash('Invalid logo format. Please use PNG or JPG.')
+        return redirect(url_for('company_login_signup'))
+    
+    if not allowed_file(policy.filename, {'pdf'}):
+        flash('Invalid policy document format. Please use PDF.')
+        return redirect(url_for('company_login_signup'))
     
     try:
+        logo_filename = secure_filename(logo.filename)
+        policy_filename = secure_filename(policy.filename)
+        
+        logo.save(os.path.join(app.config['UPLOAD_FOLDER'], logo_filename))
+        policy.save(os.path.join(app.config['UPLOAD_FOLDER'], policy_filename))
+        
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-                      (session['user_id'], title, content))
-        conn.commit()
-        conn.close()
-        flash('Post created successfully!')
-    except Exception as e:
-        flash('An error occurred while creating the post.')
-    
-    return redirect(url_for('dashboard'))
-
-@app.route('/profile')
-def profile():
-    if 'user_id' not in session:
-        flash('Please login to view your profile.')
-        return redirect(url_for('login_signup'))
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
-    user = cursor.fetchone()
-    conn.close()
-    
-    return render_template('profile.html', user=user)
-
-@app.route('/update_profile', methods=['POST'])
-def update_profile():
-    if 'user_id' not in session:
-        flash('Please login to update your profile.')
-        return redirect(url_for('login_signup'))
-    
-    username = request.form.get('username')
-    email = request.form.get('email')
-    
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        
-        # Update basic info
-        cursor.execute('UPDATE users SET username = ?, email = ? WHERE id = ?',
-                      (username, email, session['user_id']))
-        
-        # Handle photo upload
-        if 'photo' in request.files:
-            photo = request.files['photo']
-            if photo and allowed_file(photo.filename, {'png', 'jpg', 'jpeg'}):
-                photo_filename = secure_filename(photo.filename)
-                photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
-                cursor.execute('UPDATE users SET photo = ? WHERE id = ?',
-                             (photo_filename, session['user_id']))
-        
-        # Handle resume upload
-        if 'resume' in request.files:
-            resume = request.files['resume']
-            if resume and allowed_file(resume.filename, {'pdf'}):
-                resume_filename = secure_filename(resume.filename)
-                resume.save(os.path.join(app.config['UPLOAD_FOLDER'], resume_filename))
-                cursor.execute('UPDATE users SET resume = ? WHERE id = ?',
-                             (resume_filename, session['user_id']))
-        
+        cursor.execute('INSERT INTO companies (company_name, email, password, logo, policy_doc) VALUES (?, ?, ?, ?, ?)',
+                     (company_name, email, password, logo_filename, policy_filename))
         conn.commit()
         conn.close()
         
-        session['username'] = username  # Update session with new username
-        flash('Profile updated successfully!')
+        flash('Company registration successful! Please login.')
+        return redirect(url_for('company_login_signup'))
+        
     except sqlite3.IntegrityError:
-        flash('Username or email already exists.')
+        flash('Company name or email already exists.')
+        return redirect(url_for('company_login_signup'))
     except Exception as e:
-        flash('An error occurred while updating your profile.')
-    
-    return redirect(url_for('profile'))
-
-@app.route('/logout', methods=['POST'])
-def logout():
-    session.clear()
-    flash('You have been logged out successfully.')
-    return redirect(url_for('login_signup'))
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-@app.errorhandler(413)
-def file_too_large(e):
-    flash('File too large. Maximum size is 16MB.')
-    return redirect(url_for('dashboard'))
+        flash('An error occurred during registration.')
+        return redirect(url_for('company_login_signup'))
 
 if __name__ == '__main__':
     app.run(debug=True)
+
