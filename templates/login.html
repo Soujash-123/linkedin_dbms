@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Job Portal Login and Signup Page">
+    <title>Job Portal - Login/Signup</title>
+    <style>
+        :root {
+            --primary-color: #2575fc;
+            --secondary-color: #6a11cb;
+            --text-color: #ffffff;
+            --error-color: #ff4444;
+            --success-color: #00C851;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 1rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            color: var(--text-color);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .logo {
+            display: block;
+            margin: 0 auto 1.5rem;
+            width: 100px;
+            height: auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .toggle-buttons button {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--text-color);
+            background: transparent;
+            color: var(--text-color);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .toggle-buttons button.active {
+            background: var(--text-color);
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            padding: 0.5rem;
+            background: transparent;
+        }
+
+        .file-input-wrapper input[type="file"]::file-selector-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .form-container {
+            position: relative;
+            min-height: 300px;
+        }
+
+        .form {
+            position: absolute;
+            width: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+            transform: translateX(50px);
+        }
+
+        .form.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        .company-link {
+            position: absolute;
+            bottom: -40px;
+            right: 0;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .company-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .company-link:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .company-link a:hover {
+            color: var(--text-color);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .flash-messages {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .flash-messages li {
+            color: var(--error-color);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 68, 68, 0.1);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Job Portal</h2>
+        <img src="static/logo.svg" alt="Job Portal Logo" class="logo">
+
+        <div class="toggle-buttons">
+            <button id="loginBtn" class="active" type="button" aria-pressed="true">Login</button>
+            <button id="signupBtn" type="button" aria-pressed="false">Signup</button>
+        </div>
+
+        <div class="form-container">
+            <form id="loginForm" class="form active" method="POST" novalidate>
+                <h3>Welcome Back</h3>
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" required 
+                           placeholder="Enter your email"
+                           aria-describedby="loginEmailError">
+                    <div id="loginEmailError" class="error-message">Please enter a valid email address</div>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required 
+                           placeholder="Enter your password"
+                           aria-describedby="loginPasswordError">
+                    <div id="loginPasswordError" class="error-message">Password is required</div>
+                </div>
+                <button type="submit" name="login">Login</button>
+            </form>
+
+            <form id="signupForm" class="form" method="POST" enctype="multipart/form-data" novalidate>
+                <h3>Create Account</h3>
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" name="username" required 
+                           placeholder="Choose a username"
+                           aria-describedby="usernameError">
+                    <div id="usernameError" class="error-message">Username must be at least 3 characters</div>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" name="email" required 
+                           placeholder="Enter your email"
+                           aria-describedby="signupEmailError">
+                    <div id="signupEmailError" class="error-message">Please enter a valid email address</div>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" required 
+                           placeholder="Create a password"
+                           aria-describedby="signupPasswordError">
+                    <div id="signupPasswordError" class="error-message">Password must be at least 8 characters</div>
+                </div>
+                <div class="form-group">
+                    <label for="photo">Profile Photo</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="photo" name="photo" accept="image/*" required
+                               aria-describedby="photoError">
+                        <div id="photoError" class="error-message">Please select a profile photo</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="resume">Resume (PDF)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="resume" name="resume" accept=".pdf" required
+                               aria-describedby="resumeError">
+                        <div id="resumeError" class="error-message">Please upload your resume in PDF format</div>
+                    </div>
+                </div>
+                <button type="submit" name="signup">Create Account</button>
+            </form>
+        </div>
+
+        <div class="company-link">
+            <a href="company.html">Login as a Company</a>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('loginBtn');
+            const signupBtn = document.getElementById('signupBtn');
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+
+            function toggleForm(formType) {
+                if (formType === 'login') {
+                    loginForm.classList.add('active');
+                    signupForm.classList.remove('active');
+                    loginBtn.classList.add('active');
+                    signupBtn.classList.remove('active');
+                    loginBtn.setAttribute('aria-pressed', 'true');
+                    signupBtn.setAttribute('aria-pressed', 'false');
+                } else {
+                    signupForm.classList.add('active');
+                    loginForm.classList.remove('active');
+                    signupBtn.classList.add('active');
+                    loginBtn.classList.remove('active');
+                    signupBtn.setAttribute('aria-pressed', 'true');
+                    loginBtn.setAttribute('aria-pressed', 'false');
+                }
+            }
+
+            loginBtn.addEventListener('click', () => toggleForm('login'));
+            signupBtn.addEventListener('click', () => toggleForm('signup'));
+
+            // Form validation
+            function validateEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
+            function validatePassword(password) {
+                return password.length >= 8;
+            }
+
+            function validateUsername(username) {
+                return username.length >= 3;
+            }
+
+            function showError(input, message) {
+                const errorElement = document.getElementById(`${input.id}Error`);
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                input.classList.add('error');
+            }
+
+            function hideError(input) {
+                const errorElement = document.getElementById(`${input.id}Error`);
+                errorElement.style.display = 'none';
+                input.classList.remove('error');
+            }
+
+            // Login form validation
+            loginForm.addEventListener('submit', (e) => {
+                let isValid = true;
+                const email = document.getElementById('loginEmail');
+                const password = document.getElementById('loginPassword');
+
+                if (!validateEmail(email.value)) {
+                    showError(email, 'Please enter a valid email address');
+                    isValid = false;
+                } else {
+                    hideError(email);
+                }
+
+                if (password.value.length === 0) {
+                    showError(password, 'Password is required');
+                    isValid = false;
+                } else {
+                    hideError(password);
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+
+            // Signup form validation
+            signupForm.addEventListener('submit', (e) => {
+                let isValid = true;
+                const username = document.getElementById('signupUsername');
+                const email = document.getElementById('signupEmail');
+                const password = document.getElementById('signupPassword');
+                const photo = document.getElementById('photo');
+                const resume = document.getElementById('resume');
+
+                if (!validateUsername(username.value)) {
+                    showError(username, 'Username must be at least 3 characters');
+                    isValid = false;
+                } else {
+                    hideError(username);
+                }
+
+                if (!validateEmail(email.value)) {
+                    showError(email, 'Please enter a valid email address');
+                    isValid = false;
+                } else {
+                    hideError(email);
+                }
+
+                if (!validatePassword(password.value)) {
+                    showError(password, 'Password must be at least 8 characters');
+                    isValid = false;
+                } else {
+                    hideError(password);
+                }
+
+                if (!photo.files.length) {
+                    showError(photo, 'Please select a profile photo');
+                    isValid = false;
+                } else {
+                    hideError(photo);
+                }
+
+                if (!resume.files.length) {
+                    showError(resume, 'Please upload your resume in PDF format');
+                    isValid = false;
+                } else {
+                    hideError(resume);
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
