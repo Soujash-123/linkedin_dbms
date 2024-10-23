@@ -3,144 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Dashboard - Job Portal</title>
-    <style>
-        /* Base styles */
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
+    <title>Company Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">Welcome, {{ session.company_name }}</h1>
+                <div class="flex space-x-4">
+                    <a href="#job-listings" class="text-gray-600 hover:text-gray-900">Job Listings</a>
+                    <a href="#applications" class="text-gray-600 hover:text-gray-900">Applications</a>
+                    <a href="{{ url_for('company_logout') }}" class="text-red-600 hover:text-red-800">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        /* Navigation */
-        .nav {
-            background-color: #333;
-            padding: 1rem;
-            color: white;
-        }
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <section id="post-job" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Post New Job</h2>
+            <form action="{{ url_for('post_job') }}" method="POST" class="space-y-6">
+                <div class="form-group">
+                    <label for="job_title" class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                    <input type="text" 
+                           id="job_title" 
+                           name="job_title" 
+                           required 
+                           class="w-full p-2 border rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" 
+                              name="description" 
+                              required 
+                              class="w-full p-2 border rounded-md h-32"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="requirements" class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                    <textarea id="requirements" 
+                              name="requirements" 
+                              required 
+                              class="w-full p-2 border rounded-md h-24"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                    <input type="text" 
+                           id="salary_range" 
+                           name="salary_range" 
+                           required 
+                           class="w-full p-2 border rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input type="text" 
+                           id="location" 
+                           name="location" 
+                           required 
+                           class="w-full p-2 border rounded-md">
+                </div>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                    Post Job
+                </button>
+            </form>
+        </section>
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        <section id="job-listings" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Your Job Listings</h2>
+            {% if job_listings %}
+                {% for job in job_listings %}
+                <div class="job-card border rounded-lg p-4 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">{{ job.title }}</h3>
+                    <p class="my-2 text-gray-600">{{ job.description }}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Requirements:</p>
+                            <p class="text-gray-600">{{ job.requirements }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Salary Range:</p>
+                            <p class="text-gray-600">{{ job.salary_range }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Location:</p>
+                            <p class="text-gray-600">{{ job.location }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Applications:</p>
+                            <p class="text-gray-600">{{ job.application_count }}</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">Posted on: {{ job.created_at }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-600">No job listings yet.</p>
+            {% endif %}
+        </section>
 
-        .brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 2rem;
-        }
-
-        .nav-links a:hover {
-            color: #ddd;
-        }
-
-        /* Main content */
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        /* Company profile section */
-        .company-profile {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .company-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .company-logo {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
-            margin-right: 2rem;
-        }
-
-        .company-info h1 {
-            margin: 0 0 0.5rem 0;
-        }
-
-        /* Job listings section */
-        .job-listings {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-        /* Job cards */
-        .job-card {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .job-card h3 {
-            margin: 0 0 0.5rem 0;
-            color: #333;
-        }
-
-        .job-meta {
-            color: #666;
-            font-size: 0.875rem;
-            margin-top: 1rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 2rem;
-            max-width: 600px;
-            border-radius: 8px;
+        <section id="applications" class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6">Applications Received</h2>
+            {% if applications %}
+                {% for app in applications %}
+                <div class="application-card border rounded-lg p-4 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">{{ app.job_title }}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Applicant:</p>
+                            <p class="text-gray-600">{{ app.username }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Email:</p>
+                            <p class="text-gray-600">{{ app.email }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm font-medium text-gray-700">Cover Letter:</p>
+                        <p class="text-gray-600">{{ app.cover_letter }}</p>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between">
+                        <a href="{{ url_for('static', filename='uploads/' + app.resume) }}" 
+                           target="_blank"
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            View Resume
+                        </a>
+                        <form action="{{ url_for('update_application_status') }}" method="POST" class="flex space-x-2">
+                            <input type="hidden" name="application_id" value="{{ app.id }}">
+                            <button type="submit" 
+                                    name="status" 
+                                    value="Pending" 
+                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Pending' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                Pending
+                            </button>
+                            <button type="submit" 
+                                    name="status" 
+                                    value="Reviewing" 
+                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Reviewing' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                Reviewing
+                            </button>
+                            <button type="submit" 
+                                    name="status" 
+                                    value="Accepted" 
+                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Accepted' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                Accepted
+                            </button>
+                            <button type="submit" 
+                                    name="status" 
+                                    value="Rejected" 
+                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Rejected' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                Rejected
+                            </button>
+                        </form>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">Applied on: {{ app.created_at }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-600">No applications received yet.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

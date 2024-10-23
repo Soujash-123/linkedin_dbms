@@ -4,303 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Portal Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
-    <style>
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --secondary: #6366f1;
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --accent: #0ea5e9;
-            --hover: #eff6ff;
-            --border: #e2e8f0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-        }
-
-        body {
-            background: var(--background);
-            min-height: 100vh;
-            display: flex;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            margin-left: 280px; /* Width of the navbar */
-        }
-
-        .navbar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 280px;
-            height: 100vh;
-            background: var(--surface);
-            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.05);
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border);
-        }
-
-        .brand {
-            color: var(--primary);
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            padding-left: 1rem;
-        }
-
-        .nav-links {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover {
-            background: var(--hover);
-            color: var(--primary);
-        }
-
-        .nav-link.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .nav-link i {
-            margin-right: 1rem;
-            font-size: 1.25rem;
-        }
-
-        .user-profile {
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
-            margin-top: auto;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-profile img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--primary);
-        }
-
-        .user-info {
-            flex: 1;
-        }
-
-        .user-info h4 {
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
-
-        .user-info p {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .posts-container {
-            display: grid;
-            gap: 1.5rem;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        }
-
-        .post-card {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .post-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .post-card h3 {
-            color: var(--text-primary);
-            margin-bottom: 0.75rem;
-            font-size: 1.25rem;
-        }
-
-        .post-content {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 1rem;
-        }
-
-        .post-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .welcome-header {
-            margin-bottom: 2rem;
-            background: var(--surface);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .welcome-header h1 {
-            color: var(--text-primary);
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .welcome-header p {
-            color: var(--text-secondary);
-        }
-
-        .badge {
-            background: var(--hover);
-            color: var(--primary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-            .navbar {
-                width: 100%;
-                height: auto;
-                bottom: 0;
-                top: auto;
-                left: 0;
-                padding: 0.5rem;
-            }
-
-            .brand {
-                display: none;
-            }
-
-            .nav-links {
-                flex-direction: row;
-                justify-content: space-around;
-            }
-
-            .nav-link {
-                flex-direction: column;
-                padding: 0.5rem;
-                font-size: 0.75rem;
-                text-align: center;
-            }
-
-            .nav-link i {
-                margin: 0 0 0.25rem 0;
-            }
-
-            .user-profile {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 0;
-                margin-bottom: 80px;
-                padding: 1rem;
-            }
-
-            .posts-container {
-                grid-template-columns: 1fr;
-            }
-
-            .welcome-header {
-                padding: 1rem;
-            }
-
-            .welcome-header h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<body>
-    <nav class="navbar">
-        <div class="brand">Job Portal</div>
-        <div class="nav-links">
-            <a href="{{ url_for('dashboard') }}" class="nav-link active">
-                <i class="lucide-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="#applications" class="nav-link">
-                <i class="lucide-briefcase"></i>
-                <span>Your Applications</span>
-            </a>
-            <a href="{{ url_for('profile') }}" class="nav-link">
-                <i class="lucide-user"></i>
-                <span>Profile</span>
-            </a>
-            <a href="#messages" class="nav-link">
-                <i class="lucide-message-circle"></i>
-                <span>Messages</span>
-            </a>
-        </div>
-
-        <div class="user-profile">
-            <img src="{{ url_for('static', filename='uploads/' + user['photo']) }}" alt="Profile photo">
-            <div class="user-info">
-                <h4>{{ username }}</h4>
-                <p>{{ user['email'] }}</p>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-semibold text-gray-800">Job Portal</div>
+                <div class="flex space-x-4">
+                    <a href="{{ url_for('dashboard') }}" class="text-gray-600 hover:text-gray-800">Home</a>
+                    <a href="{{ url_for('profile') }}" class="text-gray-600 hover:text-gray-800">Profile</a>
+                    <form action="{{ url_for('logout') }}" method="post" class="inline">
+                        <button type="submit" class="text-gray-600 hover:text-gray-800">Logout</button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="main-content">
-        <div class="welcome-header">
-            <h1>Welcome back, {{ username }}</h1>
-            <p>Here are the latest job posts that match your profile</p>
-        </div>
-
-        <div class="posts-container">
-            {% for post in posts %}
-            <div class="post-card">
-                <h3>{{ post['title'] }}</h3>
-                <p class="post-content">{{ post['content'] }}</p>
-                <div class="post-meta">
-                    <span>Posted {{ post['created_at'] }}</span>
-                    <span class="badge">New</span>
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="flex space-x-4">
+            <!-- User Profile Sidebar -->
+            <div class="w-1/4">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex flex-col items-center">
+                        <img src="{{ url_for('static', filename='uploads/' + user['photo']) }}" 
+                             alt="Profile photo" 
+                             class="w-32 h-32 rounded-full object-cover mb-4">
+                        <h2 class="text-xl font-semibold">{{ username }}</h2>
+                        <p class="text-gray-600">{{ user['email'] }}</p>
+                    </div>
                 </div>
             </div>
-            {% endfor %}
+
+            <!-- Main Content -->
+            <div class="w-3/4">
+                <h1 class="text-2xl font-bold mb-6">Available Job Listings</h1>
+                
+                <!-- Job Listings -->
+                <div class="space-y-4">
+                    {% for job in jobs %}
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-xl font-semibold">{{ job['title'] }}</h3>
+                                <p class="text-gray-600 mt-2">{{ job['description'] }}</p>
+                                <div class="mt-4">
+                                    <h4 class="font-semibold">Requirements:</h4>
+                                    <p class="text-gray-600">{{ job['requirements'] }}</p>
+                                </div>
+                                {% if job['salary_range'] %}
+                                <p class="text-gray-600 mt-2">Salary Range: {{ job['salary_range'] }}</p>
+                                {% endif %}
+                                {% if job['location'] %}
+                                <p class="text-gray-600">Location: {{ job['location'] }}</p>
+                                {% endif %}
+                            </div>
+                            <button onclick="openApplyModal({{ job['id'] }})" 
+                                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                Apply Now
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Application Modal -->
+    <div id="applyModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Submit Application</h3>
+                <form id="applicationForm" class="space-y-4">
+                    <input type="hidden" id="job_id" name="job_id">
+                    <div>
+                        <label for="coverLetter" class="block text-sm font-medium text-gray-700">Cover Letter</label>
+                        <textarea id="coverLetter" name="coverLetter" rows="6" 
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  required></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeApplyModal()" 
+                                class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Submit Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
-        lucide.createIcons();
+        function openApplyModal(jobId) {
+            document.getElementById('job_id').value = jobId;
+            document.getElementById('applyModal').classList.remove('hidden');
+        }
+
+        function closeApplyModal() {
+            document.getElementById('applyModal').classList.add('hidden');
+            document.getElementById('applicationForm').reset();
+        }
+
+        document.getElementById('applicationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                job_id: document.getElementById('job_id').value,
+                cover_letter: document.getElementById('coverLetter').value
+            };
+
+            fetch('/apply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Application submitted successfully!');
+                    closeApplyModal();
+                } else {
+                    alert('Error submitting application: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting application');
+            });
+        });
     </script>
 </body>
 </html>
