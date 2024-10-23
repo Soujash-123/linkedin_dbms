@@ -3,198 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Job Portal Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
     <style>
-        /* Base styles */
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #6366f1;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --accent: #0ea5e9;
+            --hover: #eff6ff;
+            --border: #e2e8f0;
         }
 
-        /* Navigation */
-        .nav {
-            background-color: #333;
-            color: white;
-            padding: 1rem;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            margin-left: 280px; /* Width of the navbar */
+        }
+
+        .navbar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--surface);
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.05);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        .brand {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding-left: 1rem;
         }
 
         .nav-links {
+            flex: 1;
             display: flex;
-            gap: 20px;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
             align-items: center;
-        }
-
-        .nav a {
-            color: white;
+            padding: 1rem;
+            color: var(--text-secondary);
             text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-
-        .nav a:hover {
-            background-color: #555;
-        }
-
-        /* Main content */
-        .main {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .welcome-section {
-            background-color: white;
-            padding: 2rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+            transition: all 0.2s;
         }
 
-        /* User info */
-        .user-info {
+        .nav-link:hover {
+            background: var(--hover);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .user-profile {
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: auto;
             display: flex;
-            gap: 2rem;
-            align-items: start;
-            margin-bottom: 2rem;
+            align-items: center;
+            gap: 1rem;
         }
 
-        .user-photo {
-            width: 150px;
-            height: 150px;
+        .user-profile img {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid var(--primary);
         }
 
-        .user-details {
-            flex-grow: 1;
+        .user-info {
+            flex: 1;
         }
 
-        /* Posts section */
-        .posts-section {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .user-info h4 {
+            color: var(--text-primary);
+            font-size: 0.95rem;
         }
 
-        .post {
-            border-bottom: 1px solid #eee;
-            padding: 1rem 0;
+        .user-info p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
         }
 
-        .post:last-child {
-            border-bottom: none;
+        .posts-container {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         }
 
-        /* Forms */
-        .create-post-form {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+        .post-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .form-group {
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+        }
+
+        .post-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
             margin-bottom: 1rem;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+        .post-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
         }
 
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        /* Flash messages */
-        .flash-messages {
+        .welcome-header {
             margin-bottom: 2rem;
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
-        .flash-message {
-            padding: 1rem;
-            border-radius: 4px;
+        .welcome-header h1 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
             margin-bottom: 0.5rem;
         }
 
-        .flash-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .welcome-header p {
+            color: var(--text-secondary);
         }
 
-        .flash-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .badge {
+            background: var(--hover);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                width: 100%;
+                height: auto;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                padding: 0.5rem;
+            }
+
+            .brand {
+                display: none;
+            }
+
+            .nav-links {
+                flex-direction: row;
+                justify-content: space-around;
+            }
+
+            .nav-link {
+                flex-direction: column;
+                padding: 0.5rem;
+                font-size: 0.75rem;
+                text-align: center;
+            }
+
+            .nav-link i {
+                margin: 0 0 0.25rem 0;
+            }
+
+            .user-profile {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-bottom: 80px;
+                padding: 1rem;
+            }
+
+            .posts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-header {
+                padding: 1rem;
+            }
+
+            .welcome-header h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="nav">
-        <h1>Job Portal</h1>
+    <nav class="navbar">
+        <div class="brand">Job Portal</div>
         <div class="nav-links">
-            <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-danger">Logout</button>
-            </form>
+            <a href="{{ url_for('dashboard') }}" class="nav-link active">
+                <i class="lucide-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#applications" class="nav-link">
+                <i class="lucide-briefcase"></i>
+                <span>Your Applications</span>
+            </a>
+            <a href="{{ url_for('profile') }}" class="nav-link">
+                <i class="lucide-user"></i>
+                <span>Profile</span>
+            </a>
+            <a href="#messages" class="nav-link">
+                <i class="lucide-message-circle"></i>
+                <span>Messages</span>
+            </a>
         </div>
-    </div>
 
-    <div class="main">
-        <div class="welcome-section">
-            <h2>Welcome, {{ user[1] }}</h2>
+        <div class="user-profile">
+            <img src="{{ url_for('static', filename='uploads/' + user['photo']) }}" alt="Profile photo">
             <div class="user-info">
-                <img class="user-photo" src="{{ url_for('static', filename='uploads/' + user[4]) }}" alt="Photo">
-                <div class="user-details">
-                    <p><strong>Email:</strong> {{ user[2] }}</p>
-                    <p><strong>Password:</strong> {{ user[3] }}</p>
-                </div>
+                <h4>{{ username }}</h4>
+                <p>{{ user['email'] }}</p>
             </div>
         </div>
+    </nav>
 
-        <div class="posts-section">
-            <h3>Your Resume:</h3>
-            <a href="{{ url_for('static', filename='uploads/' + user[5]) }}" download class="btn btn-primary">Download Resume</a>
+    <div class="main-content">
+        <div class="welcome-header">
+            <h1>Welcome back, {{ username }}</h1>
+            <p>Here are the latest job posts that match your profile</p>
+        </div>
+
+        <div class="posts-container">
+            {% for post in posts %}
+            <div class="post-card">
+                <h3>{{ post['title'] }}</h3>
+                <p class="post-content">{{ post['content'] }}</p>
+                <div class="post-meta">
+                    <span>Posted {{ post['created_at'] }}</span>
+                    <span class="badge">New</span>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
