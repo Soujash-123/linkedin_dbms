@@ -154,6 +154,24 @@ def login_signup():
 
     return render_template('login.html')
 
+# Add this new route to check application status
+@app.route('/check_application/<int:job_id>')
+def check_application(job_id):
+    if 'user_id' not in session:
+        return jsonify({'applied': False})
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id FROM applications 
+        WHERE job_id = ? AND user_id = ?
+    ''', (job_id, session['user_id']))
+    application = cursor.fetchone()
+    conn.close()
+    
+    return jsonify({'applied': application is not None})
+
+# Modify the dashboard route to include application status
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -167,12 +185,15 @@ def dashboard():
     cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
     user = cursor.fetchone()
     
-    # Get all job listings
+    # Get all job listings and check if user has applied
     cursor.execute('''
-        SELECT j.*, c.company_name 
+        SELECT j.*, c.company_name,
+               CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END as has_applied
         FROM job_listings j 
         JOIN companies c ON j.company_id = c.id 
-        ORDER BY j.created_at DESC''')
+        LEFT JOIN applications a ON j.id = a.job_id AND a.user_id = ?
+        ORDER BY j.created_at DESC
+    ''', (session['user_id'],))
     jobs = cursor.fetchall()
     
     conn.close()
