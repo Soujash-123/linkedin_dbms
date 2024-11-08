@@ -18,6 +18,10 @@
                 <div class="flex space-x-4">
                     <a href="{{ url_for('dashboard') }}" class="text-gray-600 hover:text-gray-800">Home</a>
                     <a href="{{ url_for('profile') }}" class="text-gray-600 hover:text-gray-800">Profile</a>
+                    <a href="{{ url_for('open_mail') }}" 
+                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Open Mail
+                    </a>
                     <form action="{{ url_for('logout') }}" method="post" class="inline">
                         <button type="submit" class="text-gray-600 hover:text-gray-800">Logout</button>
                     </form>
@@ -46,6 +50,17 @@
             <div class="w-3/4">
                 <h1 class="text-2xl font-bold mb-6">Available Job Listings</h1>
                 
+                <!-- Search Bar -->
+                <div class="mb-6">
+                    <input 
+                        type="text" 
+                        id="jobSearch" 
+                        placeholder="Search jobs..." 
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                        onkeyup="filterJobs()"
+                    >
+                </div>
+
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
@@ -58,32 +73,32 @@
                 {% endwith %}
 
                 <!-- Job Cards -->
-                <div class="space-y-4">
+                <div id="jobListings" class="space-y-4">
                     {% for job in jobs %}
-                    <div class="bg-white rounded-lg shadow p-6">
+                    <div class="bg-white rounded-lg shadow p-6 job-card">
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-xl font-semibold">{{ job['title'] }}</h3>
-                                    <span class="text-gray-600">{{ job['company_name'] }}</span>
+                                    <h3 class="text-xl font-semibold job-title">{{ job['title'] }}</h3>
+                                    <span class="text-gray-600 job-company">{{ job['company_name'] }}</span>
                                 </div>
                                 
-                                <p class="text-gray-700 mb-4">{{ job['description'] }}</p>
+                                <p class="text-gray-700 mb-4 job-description">{{ job['description'] }}</p>
                                 
                                 <div class="mt-4">
                                     <h4 class="font-semibold">Requirements:</h4>
-                                    <p class="text-gray-700">{{ job['requirements'] }}</p>
+                                    <p class="text-gray-700 job-requirements">{{ job['requirements'] }}</p>
                                 </div>
 
                                 {% if job['salary_range'] %}
-                                <div class="mt-2">
+                                <div class="mt-2 job-salary">
                                     <span class="font-semibold">Salary Range:</span>
                                     <span class="text-gray-700">{{ job['salary_range'] }}</span>
                                 </div>
                                 {% endif %}
 
                                 {% if job['location'] %}
-                                <div class="mt-2">
+                                <div class="mt-2 job-location">
                                     <span class="font-semibold">Location:</span>
                                     <span class="text-gray-700">{{ job['location'] }}</span>
                                 </div>
@@ -92,7 +107,7 @@
                                 <div class="flex justify-end mt-4">
                                     <button 
                                         onclick="handleApply({{ job['id'] }})"
-                                        {% if job['has_applied'] %}
+                                        {% if job["has_applied"] %}
                                             disabled
                                             class="bg-gray-400 text-white font-bold py-2 px-4 rounded cursor-not-allowed"
                                         {% else %}
@@ -116,99 +131,63 @@
         </div>
     </div>
 
-    <!-- Application Modal -->
-    <div id="applyModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Submit Application</h3>
-                <div class="mt-2">
-                    <textarea 
-                        id="coverLetter" 
-                        class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" 
-                        rows="4"
-                        placeholder="Write your cover letter here..."
-                    ></textarea>
-                </div>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button 
-                        id="cancelApplication"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        id="submitApplication"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Submit Application
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript -->
     <script>
-        async function handleApply(jobId) {
-            const applyBtn = document.getElementById(`applyBtn-${jobId}`);
-            const modal = document.getElementById('applyModal');
-            const coverLetter = document.getElementById('coverLetter');
-            
-            modal.classList.remove('hidden');
-            
-            // Update the submit handler
-            document.getElementById('submitApplication').onclick = async () => {
-                if (!coverLetter.value.trim()) {
-                    alert('Please write a cover letter');
-                    return;
-                }
+        function filterJobs() {
+            const query = document.getElementById('jobSearch').value.toLowerCase();
+            const jobs = document.querySelectorAll('.job-card');
 
-                const response = await fetch('/apply', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        job_id: jobId,
-                        cover_letter: coverLetter.value
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Disable the button and update its appearance
-                    applyBtn.disabled = true;
-                    applyBtn.classList.remove('bg-blue-500', 'hover:bg-blue-700');
-                    applyBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-                    applyBtn.textContent = 'Already Applied';
-                    
-                    // Close the modal
-                    modal.classList.add('hidden');
-                    coverLetter.value = '';
-                    
-                    // Show success message
-                    alert('Application submitted successfully!');
+            jobs.forEach(job => {
+                const title = job.querySelector('.job-title').textContent.toLowerCase();
+                const company = job.querySelector('.job-company').textContent.toLowerCase();
+                const description = job.querySelector('.job-description').textContent.toLowerCase();
+                const requirements = job.querySelector('.job-requirements').textContent.toLowerCase();
+                const location = job.querySelector('.job-location')?.textContent.toLowerCase() || '';
+
+                if (title.includes(query) || company.includes(query) || description.includes(query) || requirements.includes(query) || location.includes(query)) {
+                    job.style.display = 'block';
                 } else {
-                    alert(result.message);
+                    job.style.display = 'none';
                 }
-            };
+            });
         }
 
-        // Close modal when clicking cancel
-        document.getElementById('cancelApplication').onclick = () => {
-            document.getElementById('applyModal').classList.add('hidden');
-            document.getElementById('coverLetter').value = '';
-        };
+        function handleApply(jobId) {
+            // Prompt the user for a cover letter
+            const coverLetter = prompt("Please write a cover letter:");
 
-        // Close modal when clicking outside
-        window.onclick = (event) => {
-            const modal = document.getElementById('applyModal');
-            if (event.target === modal) {
-                modal.classList.add('hidden');
-                document.getElementById('coverLetter').value = '';
+            if (!coverLetter) {
+                alert("Cover letter is required to apply.");
+                return;
             }
-        };
+
+            // Send the application data to the backend via AJAX (fetch API)
+            fetch('/apply', {
+                method: 'POST', // Send POST request to /apply
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    job_id: jobId,
+                    cover_letter: coverLetter
+                }) // Send job_id and cover_letter in the request body
+            })
+            .then(response => response.json())  // Parse JSON response
+            .then(data => {
+                if (data.success) {
+                    // Update the button text to show "Already Applied"
+                    document.getElementById(`applyBtn-${jobId}`).innerText = 'Already Applied';
+                    document.getElementById(`applyBtn-${jobId}`).disabled = true;
+                    alert(data.message);  // Notify the user
+                } else {
+                    alert(data.message);  // Show error message if something went wrong
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while applying. Please try again later.');
+            });
+        }
     </script>
 </body>
 </html>

@@ -1,0 +1,27 @@
+<!-- view_applications.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <section id="applications" class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6">Applications Received</h2>
+            {% if applications %}
+                {% for app in applications %}
+                <div class="application-card border rounded-lg p-4 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">{{ app.job_title }}</h3>
+                    <!-- Application details here -->
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-600">No applications received yet.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

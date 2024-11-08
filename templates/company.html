@@ -89,7 +89,6 @@
         }
 
         .form-group input[type="text"],
-        .form-group input[type="email"],
         .form-group input[type="password"] {
             width: 100%;
             padding: 0.5rem;
@@ -109,6 +108,17 @@
 
         .file-input-wrapper:hover {
             border-color: #007bff;
+        }
+
+        .username-domain {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .domain-label {
+            color: #666;
+            font-weight: 500;
         }
 
         .error-message {
@@ -178,9 +188,12 @@
             <!-- Company Login Form -->
             <form action="{{ url_for('company_login') }}" method="POST" class="login-form" id="loginForm">
                 <div class="form-group">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" name="email" required>
-                    <div id="loginEmailError" class="error-message">Please enter a valid email address</div>
+                    <label for="loginCompanyName">Company Name</label>
+                    <div class="username-domain">
+                        <input type="text" id="loginCompanyName" name="company_name" required>
+                        <span class="domain-label">.company@syntalix.user</span>
+                    </div>
+                    <div id="loginCompanyNameError" class="error-message">Company name is required</div>
                 </div>
 
                 <div class="form-group">
@@ -195,15 +208,12 @@
             <!-- Company Signup Form -->
             <form action="{{ url_for('company_signup') }}" method="POST" class="signup-form" id="signupForm" style="display: none;" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="companyName">Company Name</label>
-                    <input type="text" id="companyName" name="company_name" required>
-                    <div id="companyNameError" class="error-message">Company name must be at least 3 characters</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="signupEmail">Email</label>
-                    <input type="email" id="signupEmail" name="email" required>
-                    <div id="signupEmailError" class="error-message">Please enter a valid email address</div>
+                    <label for="signupCompanyName">Company Name</label>
+                    <div class="username-domain">
+                        <input type="text" id="signupCompanyName" name="company_name" required>
+                        <span class="domain-label">.company@syntalix.user</span>
+                    </div>
+                    <div id="signupCompanyNameError" class="error-message">Company name must be at least 3 characters</div>
                 </div>
 
                 <div class="form-group">
@@ -257,79 +267,6 @@
                 buttons[1].classList.add('active');
             }
         }
-
-        // Form validation
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            let valid = true;
-            const email = document.getElementById('loginEmail');
-            const password = document.getElementById('loginPassword');
-
-            if (!email.value || !email.value.includes('@')) {
-                document.getElementById('loginEmailError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('loginEmailError').style.display = 'none';
-            }
-
-            if (!password.value) {
-                document.getElementById('loginPasswordError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('loginPasswordError').style.display = 'none';
-            }
-
-            if (!valid) {
-                e.preventDefault();
-            }
-        });
-
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
-            let valid = true;
-            const companyName = document.getElementById('companyName');
-            const email = document.getElementById('signupEmail');
-            const password = document.getElementById('signupPassword');
-            const logo = document.getElementById('logo');
-            const policy = document.getElementById('policy');
-
-            if (!companyName.value || companyName.value.length < 3) {
-                document.getElementById('companyNameError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('companyNameError').style.display = 'none';
-            }
-
-            if (!email.value || !email.value.includes('@')) {
-                document.getElementById('signupEmailError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('signupEmailError').style.display = 'none';
-            }
-
-            if (!password.value || password.value.length < 8) {
-                document.getElementById('signupPasswordError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('signupPasswordError').style.display = 'none';
-            }
-
-            if (!logo.value) {
-                document.getElementById('logoError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('logoError').style.display = 'none';
-            }
-
-            if (!policy.value) {
-                document.getElementById('policyError').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('policyError').style.display = 'none';
-            }
-
-            if (!valid) {
-                e.preventDefault();
-            }
-        });
     </script>
 </body>
 </html>

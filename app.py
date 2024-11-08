@@ -4,6 +4,9 @@ import os
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import requests
+
+url = 'https://syntalix-mail.onrender.com/api'
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Change this in production
@@ -93,7 +96,8 @@ def login_signup():
     if request.method == 'POST':
         if 'signup' in request.form:  # Handle User Signup
             username = request.form['username']
-            email = request.form['email']
+            email = f"{username}@syntalix.user"
+            orignal_password = request.form['password']
             password = generate_password_hash(request.form['password'])
             photo = request.files['photo']
             resume = request.files['resume']
@@ -125,6 +129,7 @@ def login_signup():
                 conn.close()
                 
                 flash('Signup successful! Please login.')
+                flash(uploadCredentialsfForMail(username,email,orignal_password))
                 return redirect(url_for('login_signup'))
                 
             except sqlite3.IntegrityError:
@@ -135,7 +140,7 @@ def login_signup():
                 return redirect(url_for('login_signup'))
 
         elif 'login' in request.form:  # Handle User Login
-            email = request.form['email']
+            email = f"{request.form['username']}@syntalix.user"
             password = request.form['password']
 
             conn = get_db()
@@ -153,6 +158,23 @@ def login_signup():
                 return redirect(url_for('login_signup'))
 
     return render_template('login.html')
+BASE_URL = "https://syntalix-mail.onrender.com/api"
+
+# 1. Signup
+def uploadCredentialsfForMail(username,email,password):
+    url = f"{BASE_URL}/signup"
+    payload = {
+        "username": username,
+        "email": email,
+        "password": password,
+        "type": "user"
+    }
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        print("Signup successful!")
+    else:
+        print("Failed to signup:", response.json().get("message"))
+
 
 # Add this new route to check application status
 @app.route('/check_application/<int:job_id>')
@@ -249,7 +271,7 @@ def update_profile():
         return redirect(url_for('login_signup'))
     
     username = request.form.get('username')
-    email = request.form.get('email')
+    email = f"{username}@syntalix.user"
     
     try:
         conn = get_db()
@@ -288,6 +310,10 @@ def update_profile():
         flash('An error occurred while updating your profile.')
     
     return redirect(url_for('profile'))
+
+
+
+
 @app.route('/apply', methods=['POST'])
 def apply():
     if 'user_id' not in session:
@@ -315,7 +341,7 @@ def apply():
 def logout():
     session.clear()
     flash('You have been logged out successfully.')
-    return redirect(url_for('login_signup'))
+    return redirect('/')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -338,7 +364,7 @@ def redirect_to_company():
 # Company login and signup logic
 @app.route('/company/login', methods=['POST'])
 def company_login():
-    email = request.form['email']
+    email = f"{request.form['company_name']}.company@syntalix.user"
     password = request.form['password']
 
     conn = get_db()
@@ -358,7 +384,8 @@ def company_login():
 @app.route('/company/signup', methods=['POST'])
 def company_signup():
     company_name = request.form['company_name']
-    email = request.form['email']
+    email = f"{company_name}.company@syntalix.user"
+    orignal_password = request.form['password']
     password = generate_password_hash(request.form['password'])
     logo = request.files['logo']
     policy = request.files['policy']
@@ -390,6 +417,7 @@ def company_signup():
         conn.close()
         
         flash('Company registration successful! Please login.')
+        uploadCredentialsfForMail(company_name,email,orignal_password)
         return redirect(url_for('company_login_signup'))
         
     except sqlite3.IntegrityError:
@@ -398,6 +426,77 @@ def company_signup():
     except Exception as e:
         flash('An error occurred during registration.')
         return redirect(url_for('company_login_signup'))
+from werkzeug.security import check_password_hash
+
+from werkzeug.security import check_password_hash
+
+@app.route('/open_mail', methods=['GET', 'POST'])
+def open_mail():
+    # Check if the user is logged in
+    if 'user_id' in session:
+        # Fetch the user's email and password hash from the SQLite3 database
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT email, password FROM users WHERE id = ?', (session['user_id'],))
+        user = cursor.fetchone()
+        conn.close()
+
+        if user:
+            email = user['email']
+            hashed_password = user['password']
+
+            # If the form is submitted, check the password entered
+            if request.method == 'POST':
+                entered_password = request.form['password']
+                if check_password_hash(hashed_password, entered_password):
+                    # If the entered password matches the hashed password
+                    return redirect(f"https://syntalix-mail.onrender.com/api/login/direct?email={email}&password={entered_password}")
+                else:
+                    flash('Incorrect password. Please try again.')
+                    return redirect(url_for('open_mail'))
+
+            # If it's a GET request, render a form to enter the password
+            return render_template('password_prompt.html', email=email)
+        else:
+            flash('Unable to fetch user email and password.')
+            return redirect(url_for('dashboard'))
+    else:
+        flash('Please login to access the email service.')
+        return redirect(url_for('login_signup'))
+        
+@app.route('/open_company_mail', methods=['GET', 'POST'])
+def open_company_mail():
+    # Check if the company is logged in
+    if 'company_id' in session:
+        # Fetch the company's email and password hash from the SQLite3 database
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT email, password FROM companies WHERE id = ?', (session['company_id'],))
+        company = cursor.fetchone()
+        conn.close()
+
+        if company:
+            company_email = company['email']
+            hashed_company_password = company['password']
+
+            # If the form is submitted, check the password entered
+            if request.method == 'POST':
+                entered_password = request.form['password']
+                if check_password_hash(hashed_company_password, entered_password):
+                    # If the entered password matches the hashed password
+                    return redirect(f"https://syntalix-mail.onrender.com/api/login/direct?email={company_email}&password={entered_password}")
+                else:
+                    flash('Incorrect password. Please try again.')
+                    return redirect(url_for('open_company_mail'))
+
+            # If it's a GET request, render a form to enter the password
+            return render_template('password_prompt.html', email=company_email)
+        else:
+            flash('Unable to fetch company email and password.')
+            return redirect(url_for('dashboard'))
+    else:
+        flash('Please login to access the company email service.')
+        return redirect(url_for('login_signup'))
 
 
 # Add this new route to your app.py
@@ -516,21 +615,55 @@ def update_application_status():
     
     application_id = request.form.get('application_id')
     new_status = request.form.get('status')
+    entered_password = request.form.get('password')
     
-    if not all([application_id, new_status]):
+    if not all([application_id, new_status, entered_password]):
         return jsonify({'success': False, 'message': 'Missing required fields'})
     
     try:
         conn = get_db()
         cursor = conn.cursor()
+        
+        # Verify the company's password
+        cursor.execute('SELECT password, company_name FROM companies WHERE id = ?', (session['company_id'],))
+        company = cursor.fetchone()
+        
+        if not check_password_hash(company['password'], entered_password):
+            return jsonify({'success': False, 'message': 'Invalid password'})
+        
+        # Fetch the applicant's email
+        cursor.execute('''SELECT u.email 
+                       FROM applications a
+                       JOIN users u ON a.user_id = u.id
+                       WHERE a.id = ?''', (application_id,))
+        applicant_email = cursor.fetchone()[0]
+        
         cursor.execute('UPDATE applications SET status = ? WHERE id = ?',
                       (new_status, application_id))
+        
+        
+        # Send email notification
+        company_name = company['company_name']
+        job_id = cursor.execute('SELECT job_id FROM applications WHERE id = ?', (application_id,)).fetchone()[0]
         conn.commit()
         conn.close()
+        curl_command = f"""curl -X POST https://syntalix-mail.onrender.com/api/send_email \
+            -H 'Content-Type: application/json' \
+            -d '{{
+                \"email\": \"{company_name}.company@syntalix.user\",
+                \"password\": \"{entered_password}\",
+                \"to\": \"{applicant_email}\",
+                \"subject\": \"Application Status Update for Job ID {job_id}\",
+                \"content\": \"Application Status: {new_status}\"
+            }}'"""
         
-        return jsonify({'success': True, 'message': 'Application status updated'})
+        os.system(curl_command)
+        
+        flash("Application status updated successfully.", "success")  # Flash success message
+        return redirect(url_for('company_dashboard'))  # Redirect to the dashboard or desired page
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
+        flash("An error occurred while updating the application status.", "danger")  # Flash error message
+        return redirect(url_for('company_dashboard')) 
 
 @app.route('/company/logout')
 def company_logout():

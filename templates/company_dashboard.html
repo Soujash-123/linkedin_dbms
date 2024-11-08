@@ -7,6 +7,16 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
+    {% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+        <li class="flash {{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
@@ -14,6 +24,10 @@
                 <div class="flex space-x-4">
                     <a href="#job-listings" class="text-gray-600 hover:text-gray-900">Job Listings</a>
                     <a href="#applications" class="text-gray-600 hover:text-gray-900">Applications</a>
+                    <a href="{{ url_for('open_company_mail') }}" 
+                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Open Mail
+                    </a>
                     <a href="{{ url_for('company_logout') }}" class="text-red-600 hover:text-red-800">Logout</a>
                 </div>
             </div>
@@ -128,33 +142,42 @@
                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                             View Resume
                         </a>
-                        <form action="{{ url_for('update_application_status') }}" method="POST" class="flex space-x-2">
+                        <form action="{{ url_for('update_application_status') }}" method="POST" class="flex flex-col space-y-2">
                             <input type="hidden" name="application_id" value="{{ app.id }}">
-                            <button type="submit" 
-                                    name="status" 
-                                    value="Pending" 
-                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Pending' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                Pending
+                          
+                            <div class="flex space-x-2">
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Pending" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Pending' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Pending</span>
+                              </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Reviewing" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Reviewing' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Reviewing</span>
+                              </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Accepted" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Accepted' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Accepted</span>
+                              </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Rejected" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Rejected' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Rejected</span>
+                              </label>
+                            </div>
+                          
+                            <div class="flex space-x-2">
+                              <label for="remarks" class="text-gray-700 font-medium">Remarks:</label>
+                              <textarea name="remarks" id="remarks" rows="2" class="border border-gray-300 rounded-md px-3 py-2 w-full"></textarea>
+                            </div>
+                          
+                            <div class="flex space-x-2">
+                              <label for="password" class="text-gray-700 font-medium">Confirm Password:</label>
+                              <input type="password" name="password" id="password" class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                            </div>
+                          
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                              Update Application Status
                             </button>
-                            <button type="submit" 
-                                    name="status" 
-                                    value="Reviewing" 
-                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Reviewing' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                Reviewing
-                            </button>
-                            <button type="submit" 
-                                    name="status" 
-                                    value="Accepted" 
-                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Accepted' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                Accepted
-                            </button>
-                            <button type="submit" 
-                                    name="status" 
-                                    value="Rejected" 
-                                    class="px-3 py-1 rounded-md text-sm {% if app.status == 'Rejected' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                Rejected
-                            </button>
-                        </form>
+                          </form>
                     </div>
                     <p class="text-xs text-gray-500 mt-4">Applied on: {{ app.created_at }}</p>
                 </div>
