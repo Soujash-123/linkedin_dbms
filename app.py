@@ -71,6 +71,14 @@ def init_db():
                         FOREIGN KEY (job_id) REFERENCES job_listings (id),
                         FOREIGN KEY (user_id) REFERENCES users (id))''')
     
+    cursor.execute('''
+CREATE TABLE IF NOT EXISTS Job_Status (
+    Job_ID INTEGER PRIMARY KEY,
+    Status TEXT DEFAULT 'Open',
+    FOREIGN KEY (Job_ID) REFERENCES job_listings(id) ON DELETE CASCADE
+)
+''')
+    
     conn.commit()
     conn.close()
 
@@ -209,12 +217,13 @@ def dashboard():
     
     # Get all job listings and check if user has applied
     cursor.execute('''
-        SELECT j.*, c.company_name,
-               CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END as has_applied
-        FROM job_listings j 
-        JOIN companies c ON j.company_id = c.id 
-        LEFT JOIN applications a ON j.id = a.job_id AND a.user_id = ?
-        ORDER BY j.created_at DESC
+        SELECT j.*, COUNT(a.id) as application_count 
+    FROM job_listings j 
+    LEFT JOIN applications a ON j.id = a.job_id 
+    JOIN Job_Status s ON j.id = s.Job_ID 
+    WHERE j.company_id = ? AND s.Status = 'Open'
+    GROUP BY j.id 
+    ORDER BY j.created_at DESC
     ''', (session['user_id'],))
     jobs = cursor.fetchall()
     
@@ -512,11 +521,12 @@ def company_dashboard():
     cursor.execute('SELECT * FROM companies WHERE id = ?', (session['company_id'],))
     company = cursor.fetchone()
     
-    # Get all job listings for this company
+    # Get all job listings for this company, along with application counts and job statuses (job_id and status)
     cursor.execute('''
-        SELECT j.*, COUNT(a.id) as application_count 
+        SELECT j.*, COUNT(a.id) as application_count, js.job_id, js.status as job_status
         FROM job_listings j 
         LEFT JOIN applications a ON j.id = a.job_id 
+        LEFT JOIN job_status js ON j.id = js.job_id  -- Join with job_status table
         WHERE j.company_id = ? 
         GROUP BY j.id 
         ORDER BY j.created_at DESC''', 
@@ -547,7 +557,7 @@ def post_job():
     if not session.get('company_id'):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     
-    # Get all form fields and print them for debugging
+    # Get all form fields
     title = request.form.get('job_title', '')
     description = request.form.get('description', '')
     requirements = request.form.get('requirements', '')
@@ -583,16 +593,26 @@ def post_job():
         # Print SQL data before insertion for debugging
         print(f"Attempting to insert job with company_id: {session['company_id']}")
         
+        # Insert into job_listings first
         cursor.execute('''
             INSERT INTO job_listings 
             (company_id, title, description, requirements, salary_range, location)
             VALUES (?, ?, ?, ?, ?, ?)''',
             (session['company_id'], title, description, requirements, salary_range, location))
         
+        # Get the ID of the newly inserted job
+        job_id = cursor.lastrowid
+        
+        # Insert into Job_Status table with default 'Open' status
+        cursor.execute('''
+            INSERT INTO Job_Status (Job_ID, Status)
+            VALUES (?, ?)''',
+            (job_id, 'Open'))
+        
         conn.commit()
         conn.close()
         
-        print("Job posted successfully")
+        print("Job posted successfully with status tracking")
         return jsonify({
             'success': True, 
             'message': 'Job posted successfully',
@@ -601,12 +621,35 @@ def post_job():
                 'description': description,
                 'requirements': requirements,
                 'salary_range': salary_range,
-                'location': location
+                'location': location,
+                'status': 'Open'
             }
         })
     except Exception as e:
         print(f"Error posting job: {str(e)}")
         return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
+
+@app.route('/close-job/<int:job_id>', methods=['POST'])
+def close_job(job_id):
+    if not session.get('company_id'):
+        return redirect(url_for('company_login_signup'))
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Update the job status to 'Closed' in the job_status table
+    cursor.execute('''
+        UPDATE job_status 
+        SET status = 'Closed' 
+        WHERE job_id = ? AND status = 'Open'
+    ''', (job_id,))
+    
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+    # Redirect to company dashboard after updating the status
+    return redirect(url_for('company_dashboard'))
 
 @app.route('/company/update-application-status', methods=['POST'])
 def update_application_status():
