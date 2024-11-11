@@ -7,14 +7,27 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
+    {% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+        <li class="flash {{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-bold text-gray-800">Welcome, {{ session.company_name }}</h1>
                 <div class="flex space-x-4">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900">Home</a>
-                    <a href="#view-applications" class="text-gray-600 hover:text-gray-900">View Applications</a>
-                    <a href="#create-new-post" class="text-gray-600 hover:text-gray-900">Create New Post</a>
+                    <a href="#job-listings" class="text-gray-600 hover:text-gray-900">Job Listings</a>
+                    <a href="#applications" class="text-gray-600 hover:text-gray-900">Applications</a>
+                    <a href="{{ url_for('open_company_mail') }}" 
+                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Open Mail
+                    </a>
                     <a href="{{ url_for('company_logout') }}" class="text-red-600 hover:text-red-800">Logout</a>
                 </div>
             </div>
@@ -22,7 +35,54 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Home Section -->
+        <section id="post-job" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Post New Job</h2>
+            <form action="{{ url_for('post_job') }}" method="POST" class="space-y-6">
+                <div class="form-group">
+                    <label for="job_title" class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                    <input type="text" 
+                           id="job_title" 
+                           name="job_title" 
+                           required 
+                           class="w-full p-2 border rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" 
+                              name="description" 
+                              required 
+                              class="w-full p-2 border rounded-md h-32"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="requirements" class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                    <textarea id="requirements" 
+                              name="requirements" 
+                              required 
+                              class="w-full p-2 border rounded-md h-24"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                    <input type="text" 
+                           id="salary_range" 
+                           name="salary_range" 
+                           required 
+                           class="w-full p-2 border rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input type="text" 
+                           id="location" 
+                           name="location" 
+                           required 
+                           class="w-full p-2 border rounded-md">
+                </div>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                    Post Job
+                </button>
+            </form>
+        </section>
+
         <section id="home" class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-2xl font-bold mb-6">Current Job Postings</h2>
             {% if job_listings %}
@@ -50,8 +110,8 @@
             {% endif %}
         </section>
 
-        <!-- View Applications Section -->
-        <section id="view-applications" class="bg-white rounded-lg shadow-md p-6 mb-8">
+
+        <section id="applications" class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-2xl font-bold mb-6">Applications Received</h2>
             {% if applications %}
                 {% for app in applications %}
@@ -79,31 +139,40 @@
                         </a>
                         <form action="{{ url_for('update_application_status') }}" method="POST" class="flex flex-col space-y-2">
                             <input type="hidden" name="application_id" value="{{ app.id }}">
-                            <!-- Status Radio Buttons -->
+                          
                             <div class="flex space-x-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="status" value="Pending" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Pending' %}checked{% endif %}>
-                                    <span class="ml-2 text-gray-700">Pending</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="status" value="Reviewing" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Reviewing' %}checked{% endif %}>
-                                    <span class="ml-2 text-gray-700">Reviewing</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="status" value="Accepted" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Accepted' %}checked{% endif %}>
-                                    <span class="ml-2 text-gray-700">Accepted</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="status" value="Rejected" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Rejected' %}checked{% endif %}>
-                                    <span class="ml-2 text-gray-700">Rejected</span>
-                                </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Pending" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Pending' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Pending</span>
+                              </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Reviewing" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Reviewing' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Reviewing</span>
+                              </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Accepted" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Accepted' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Accepted</span>
+                              </label>
+                              <label class="flex items-center">
+                                <input type="radio" name="status" value="Rejected" class="form-radio h-5 w-5 text-blue-600" {% if app.status == 'Rejected' %}checked{% endif %}>
+                                <span class="ml-2 text-gray-700">Rejected</span>
+                              </label>
                             </div>
+                          
+                            <div class="flex space-x-2">
+                              <label for="remarks" class="text-gray-700 font-medium">Remarks:</label>
+                              <textarea name="remarks" id="remarks" rows="2" class="border border-gray-300 rounded-md px-3 py-2 w-full"></textarea>
+                            </div>
+                          
+                            <div class="flex space-x-2">
+                              <label for="password" class="text-gray-700 font-medium">Confirm Password:</label>
+                              <input type="password" name="password" id="password" class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                            </div>
+                          
                             <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
-                                Update Application Status
+                              Update Application Status
                             </button>
-                        </form>
-                        <!-- Close Application Button -->
-                        
+                          </form>
                     </div>
                     <p class="text-xs text-gray-500 mt-4">Applied on: {{ app.created_at }}</p>
                 </div>
@@ -111,36 +180,6 @@
             {% else %}
                 <p class="text-gray-600">No applications received yet.</p>
             {% endif %}
-        </section>
-
-        <!-- Create New Post Section -->
-        <section id="create-new-post" class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-2xl font-bold mb-6">Create New Job Post</h2>
-            <form action="{{ url_for('post_job') }}" method="POST" class="space-y-6">
-                <div class="form-group">
-                    <label for="job_title" class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-                    <input type="text" id="job_title" name="job_title" required class="w-full p-2 border rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea id="description" name="description" required class="w-full p-2 border rounded-md h-32"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="requirements" class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
-                    <textarea id="requirements" name="requirements" required class="w-full p-2 border rounded-md h-24"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
-                    <input type="text" id="salary_range" name="salary_range" required class="w-full p-2 border rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <input type="text" id="location" name="location" required class="w-full p-2 border rounded-md">
-                </div>
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                    Post Job
-                </button>
-            </form>
         </section>
     </main>
 </body>
