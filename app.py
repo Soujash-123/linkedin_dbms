@@ -99,6 +99,10 @@ def index():
         return redirect(url_for('company_dashboard'))
     return redirect(url_for('login_signup'))
 
+@app.route('/ping')
+def ping():
+    return jsonify({'status': 'ok'}), 200
+
 @app.route('/login', methods=['GET', 'POST'])
 def login_signup():
     if request.method == 'POST':
