@@ -105,7 +105,6 @@ def login_signup():
         if 'signup' in request.form:  # Handle User Signup
             username = request.form['username']
             email = f"{username}@syntalix.user"
-            orignal_password = request.form['password']
             password = generate_password_hash(request.form['password'])
             photo = request.files['photo']
             resume = request.files['resume']
@@ -137,14 +136,14 @@ def login_signup():
                 conn.close()
                 
                 flash('Signup successful! Please login.')
-                flash(uploadCredentialsfForMail(username,email,orignal_password))
+                flash(uploadCredentialsfForMail(username,email,password))
                 return redirect(url_for('login_signup'))
                 
             except sqlite3.IntegrityError:
                 flash('Username or email already exists.')
                 return redirect(url_for('login_signup'))
             except Exception as e:
-                flash('An error occurred during signup.')
+                flash('An error occurred during signup.'+str(e))
                 return redirect(url_for('login_signup'))
 
         elif 'login' in request.form:  # Handle User Login
@@ -394,7 +393,6 @@ def company_login():
 def company_signup():
     company_name = request.form['company_name']
     email = f"{company_name}.company@syntalix.user"
-    orignal_password = request.form['password']
     password = generate_password_hash(request.form['password'])
     logo = request.files['logo']
     policy = request.files['policy']
@@ -426,7 +424,7 @@ def company_signup():
         conn.close()
         
         flash('Company registration successful! Please login.')
-        uploadCredentialsfForMail(company_name,email,orignal_password)
+        uploadCredentialsfForMail(company_name,email,password)
         return redirect(url_for('company_login_signup'))
         
     except sqlite3.IntegrityError:
@@ -459,7 +457,7 @@ def open_mail():
                 entered_password = request.form['password']
                 if check_password_hash(hashed_password, entered_password):
                     # If the entered password matches the hashed password
-                    return redirect(f"https://syntalix-mail.onrender.com/api/login/direct?email={email}&password={entered_password}")
+                    return redirect(f"https://syntalix-mail.onrender.com/api/login/direct?email={email}&password={hashed_password}")
                 else:
                     flash('Incorrect password. Please try again.')
                     return redirect(url_for('open_mail'))
@@ -493,7 +491,7 @@ def open_company_mail():
                 entered_password = request.form['password']
                 if check_password_hash(hashed_company_password, entered_password):
                     # If the entered password matches the hashed password
-                    return redirect(f"https://syntalix-mail.onrender.com/api/login/direct?email={company_email}&password={entered_password}")
+                    return redirect(f"https://syntalix-mail.onrender.com/api/login/direct?email={company_email}&password={hashed_company_password}")
                 else:
                     flash('Incorrect password. Please try again.')
                     return redirect(url_for('open_company_mail'))
