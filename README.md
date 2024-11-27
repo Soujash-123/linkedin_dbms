@@ -1,4 +1,7 @@
 # OppurtuNest2.0
+## Deployment Links
+- [Primary](https://oppurtunest.onrender.com/login)
+- [Alternate](https://oppurtunestv2-alt.onrender.com/login)
 
 OppurtuNest2.0 is a comprehensive Flask-based job portal that integrates job application management with secure email notifications through Syntalix’s SMTP server. Key features include user authentication, job posting, resume upload, an administrative dashboard, and a responsive design adaptable to various devices.
 
