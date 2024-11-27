@@ -140,7 +140,7 @@ def login_signup():
                 conn.close()
                 
                 flash('Signup successful! Please login.')
-                flash(uploadCredentialsfForMail(username,email,password))
+                #flash(uploadCredentialsfForMail(username,email,password))
                 return redirect(url_for('login_signup'))
                 
             except sqlite3.IntegrityError:
